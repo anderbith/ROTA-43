@@ -1,0 +1,1999 @@
+<!doctype html>
+<html lang="pt-br">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Logistics Pro | Roteirizador Inteligente – Londrina</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+      integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+      crossorigin=""
+    />
+    <style>
+      :root {
+        --primary: #0d9488;
+        --primary-hover: #0f766e;
+        --secondary: #475569;
+        --bg: #f1f5f9;
+        --card-bg: #ffffff;
+        --border: #e2e8f0;
+        --success: #059669;
+        --warning: #d97706;
+        --danger: #dc2626;
+        --text-main: #0f172a;
+        --text-muted: #64748b;
+        --shadow:
+          0 4px 6px -1px rgb(0 0 0 / 0.08), 0 2px 4px -2px rgb(0 0 0 / 0.06);
+        --radius: 12px;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "DM Sans", sans-serif;
+        background: var(--bg);
+        min-height: 100vh;
+        margin: 0;
+        padding: 24px 16px;
+        color: var(--text-main);
+      }
+
+      .container {
+        max-width: 1400px;
+        margin: 0 auto;
+      }
+
+      header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 16px;
+        margin-bottom: 28px;
+        padding-bottom: 16px;
+        border-bottom: 2px solid var(--border);
+      }
+
+      header h1 {
+        margin: 0;
+        font-size: 1.75rem;
+        font-weight: 700;
+        color: var(--text-main);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      header .subtitle {
+        font-size: 0.9rem;
+        color: var(--text-muted);
+        font-weight: 400;
+      }
+
+      .header-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        align-items: center;
+      }
+
+      .btn {
+        border: none;
+        padding: 10px 18px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: 600;
+        font-size: 0.9rem;
+        transition: all 0.2s;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .btn:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
+      .btn-primary {
+        background: var(--primary);
+        color: white;
+      }
+      .btn-primary:hover:not(:disabled) {
+        background: var(--primary-hover);
+      }
+      .btn-secondary {
+        background: white;
+        color: var(--text-main);
+        border: 1px solid var(--border);
+      }
+      .btn-secondary:hover:not(:disabled) {
+        background: #f8fafc;
+      }
+      .btn-danger {
+        background: var(--danger);
+        color: white;
+      }
+      .btn-danger:hover:not(:disabled) {
+        filter: brightness(1.1);
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: 380px 1fr;
+        gap: 24px;
+        align-items: start;
+      }
+
+      .card {
+        background: var(--card-bg);
+        padding: 20px;
+        border-radius: var(--radius);
+        box-shadow: var(--shadow);
+        border: 1px solid var(--border);
+        margin-bottom: 20px;
+      }
+
+      .card h3 {
+        margin: 0 0 16px 0;
+        font-size: 1.05rem;
+        font-weight: 700;
+        color: var(--text-main);
+        padding-bottom: 10px;
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      label {
+        display: block;
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: var(--text-muted);
+        margin-bottom: 4px;
+      }
+      input[type="text"],
+      input[type="number"],
+      input[type="file"] {
+        width: 100%;
+        padding: 10px 12px;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        font-size: 0.9rem;
+        margin-bottom: 10px;
+      }
+      input:focus {
+        outline: none;
+        border-color: var(--primary);
+        box-shadow: 0 0 0 2px rgba(13, 148, 136, 0.15);
+      }
+
+      textarea {
+        width: 100%;
+        height: 160px;
+        padding: 12px;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        font-family: inherit;
+        font-size: 0.85rem;
+        resize: vertical;
+        margin-bottom: 10px;
+      }
+      textarea:focus {
+        outline: none;
+        border-color: var(--primary);
+      }
+
+      .form-row {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-bottom: 10px;
+      }
+      .form-row .field {
+        flex: 1;
+        min-width: 80px;
+      }
+
+      .driver-list {
+        max-height: 180px;
+        overflow-y: auto;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 8px;
+        background: #f8fafc;
+        font-size: 0.8rem;
+        margin-bottom: 12px;
+      }
+
+      .mode-options {
+        margin-bottom: 16px;
+      }
+      .mode-options label {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        cursor: pointer;
+        margin-bottom: 8px;
+        font-weight: 500;
+        color: var(--text-main);
+      }
+      .mode-options input[type="radio"] {
+        width: 18px;
+        height: 18px;
+        margin: 0;
+      }
+
+      /* Resultado: cards por motorista */
+      #resultado {
+        display: none;
+      }
+      #resultado.visible {
+        display: block;
+      }
+
+      .efficiency-bar {
+        margin-bottom: 24px;
+        padding: 16px 20px;
+        background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+        border: 1px solid #5eead4;
+        border-radius: var(--radius);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 12px;
+      }
+      .efficiency-bar .label {
+        font-weight: 600;
+        color: #0f766e;
+      }
+      .efficiency-bar .value {
+        font-size: 1.5rem;
+        font-weight: 800;
+        color: #0d9488;
+      }
+
+      .progress-wrap {
+        height: 10px;
+        background: #e2e8f0;
+        border-radius: 999px;
+        overflow: hidden;
+        margin-top: 8px;
+      }
+      .progress-fill {
+        height: 100%;
+        border-radius: 999px;
+        transition: width 0.4s ease;
+      }
+
+      .driver-cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+        gap: 20px;
+      }
+      .driver-card {
+        border-radius: var(--radius);
+        overflow: hidden;
+        box-shadow: var(--shadow);
+        border: 1px solid var(--border);
+        background: white;
+      }
+      .driver-card.drop-target {
+        outline: 2px dashed var(--primary);
+        outline-offset: -4px;
+      }
+      .driver-card .card-header {
+        padding: 16px;
+        color: white;
+        font-weight: 700;
+        font-size: 1rem;
+      }
+      .driver-card .card-body {
+        padding: 16px;
+      }
+      .driver-card .capacity-line {
+        font-size: 0.9rem;
+        margin-bottom: 12px;
+        font-weight: 600;
+        color: var(--text-main);
+      }
+      .driver-card .deliveries {
+        margin-bottom: 12px;
+      }
+      .driver-card .deliveries ul {
+        margin: 0;
+        padding-left: 18px;
+        font-size: 0.85rem;
+        line-height: 1.6;
+        color: var(--text-main);
+      }
+      .driver-card .deliveries .delivery-item {
+        cursor: grab;
+      }
+      .driver-card .deliveries .delivery-item.dragging {
+        opacity: 0.6;
+      }
+      .driver-card .route-order {
+        margin-top: 12px;
+        padding-top: 12px;
+        border-top: 1px dashed var(--border);
+        font-size: 0.8rem;
+        color: var(--text-muted);
+      }
+      .driver-card .route-order strong {
+        color: var(--text-main);
+      }
+      .driver-card .route-order .path {
+        color: var(--primary);
+        font-weight: 600;
+      }
+
+      .alert-box {
+        padding: 12px 16px;
+        border-radius: 8px;
+        margin-top: 12px;
+        font-size: 0.9rem;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .alert-box.warning {
+        background: #fef3c7;
+        border: 1px solid #f59e0b;
+        color: #92400e;
+      }
+      .alert-box.danger {
+        background: #fee2e2;
+        border: 1px solid #dc2626;
+        color: #991b1b;
+      }
+
+      .summary-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.85rem;
+      }
+      .summary-table th,
+      .summary-table td {
+        padding: 10px 12px;
+        text-align: left;
+        border-bottom: 1px solid var(--border);
+      }
+      .summary-table th {
+        background: #f8fafc;
+        color: var(--text-muted);
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 0.75rem;
+      }
+      .summary-table tbody tr:hover {
+        background: #f8fafc;
+      }
+
+      .no-print {
+      }
+      @media print {
+        body {
+          background: white;
+          padding: 0;
+        }
+        .no-print {
+          display: none !important;
+        }
+        .card {
+          box-shadow: none;
+          border: 1px solid #ccc;
+          page-break-inside: avoid;
+        }
+      }
+
+      @media (max-width: 900px) {
+        .grid {
+          grid-template-columns: 1fr;
+        }
+        header {
+          flex-direction: column;
+          align-items: flex-start;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <header>
+        <div>
+          <h1>🚚 Roteirizador Inteligente</h1>
+          <p class="subtitle">
+            Distribuidora em Londrina · Distribuição automática de cargas
+          </p>
+        </div>
+        <div class="header-actions no-print">
+          <button
+            type="button"
+            class="btn btn-secondary"
+            onclick="exportarJSON()"
+          >
+            📦 Backup JSON
+          </button>
+          <button
+            type="button"
+            class="btn btn-secondary"
+            onclick="exportarCSV()"
+          >
+            📄 Exportar CSV
+          </button>
+          <button
+            type="button"
+            class="btn btn-secondary"
+            onclick="document.getElementById('importFile').click()"
+          >
+            📥 Importar JSON
+          </button>
+          <input
+            type="file"
+            id="importFile"
+            accept=".json"
+            style="display: none"
+            onchange="importarJSON(event)"
+          />
+          <button
+            type="button"
+            class="btn btn-primary"
+            onclick="imprimirRomaneio()"
+          >
+            🖨️ Romaneio (PDF)
+          </button>
+        </div>
+      </header>
+
+      <div class="grid">
+        <div class="no-print">
+          <div class="card">
+            <h3>📦 1. Cargas do Dia</h3>
+            <p
+              style="
+                font-size: 0.8rem;
+                color: var(--text-muted);
+                margin-bottom: 8px;
+              "
+            >
+              Formato: N.Roteiro/Cidade ou Cliente/Peso (kg)
+            </p>
+            <textarea
+              id="inputCargas"
+              placeholder="53458/ARAPONGAS/210&#10;53441/ARAPONGAS/816&#10;52457/LONDRINA/2429"
+            ></textarea>
+            <!-- cargas são inseridas diretamente no textarea acima; botões e campos manuais removidos -->
+            <button
+              type="button"
+              class="btn btn-secondary"
+              style="width: 100%; margin-top: 6px"
+              onclick="carregarExemploCargas()"
+            >
+              Inserir dados de exemplo
+            </button>
+          </div>
+
+          <div class="card">
+            <h3>👤 2. Frota (Motoristas)</h3>
+            <div class="form-row">
+              <div class="field" style="flex: 1">
+                <label
+                  >Frota (um motorista por linha: NOME/UTILITÁRIO/PESO)</label
+                >
+                <textarea id="inputMotoristas" rows="4"></textarea>
+                <button
+                  type="button"
+                  class="btn btn-secondary"
+                  style="width: 100%; margin-top: 6px"
+                  onclick="
+                    document.getElementById('inputMotoristas').value =
+                      'MARCELO BALDINO/VAN/1500\nJOSE CARLOS/CAMINHAO/4000\nRODRIGO MARONEZZ/VAN/1500\nFLAVIO FELIX/KOMBI/800\nEDER BERALDI/VAN/1500'
+                  "
+                >
+                  Inserir dados de exemplo
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <h3>⚙️ 3. Modo de Distribuição</h3>
+            <div class="mode-options">
+              <label>
+                <input type="radio" name="modoDist" value="equilibrado" />
+                Distribuir equilibrado entre todos
+              </label>
+              <label>
+                <input type="radio" name="modoDist" value="sequencia" checked />
+                Distribuir mantendo sequência atual
+              </label>
+              <label>
+                <input
+                  type="radio"
+                  name="modoDist"
+                  value="prioridade_proximidade"
+                />
+                Priorizar entregas por proximidade (Leaflet / Haversine)
+              </label>
+            </div>
+            <button
+              type="button"
+              class="btn btn-primary"
+              style="width: 100%"
+              onclick="distribuirCargas()"
+            >
+              🚀 Processar e Distribuir
+            </button>
+          </div>
+          <button type="button" class="btn-mapa" onclick="abrirMapaComparativo()" style="background-color: #6366f1; color: white;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 8px;"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"></polygon><line x1="8" y1="2" x2="8" y2="18"></line><line x1="16" y1="6" x2="16" y2="22"></line></svg>
+            VER MAPA DE APOIO
+          </button>
+        </div>
+
+        <div>
+          <div id="resultado">
+            <div id="efficiencyBox" class="efficiency-bar no-print"></div>
+            <div id="alertasBox"></div>
+            <div id="driverCards" class="driver-cards"></div>
+            <div class="card" style="margin-top: 20px">
+              <h3>📋 Resumo por Região</h3>
+              <div class="table-container">
+                <table class="summary-table" id="tabelaResumo">
+                  <thead>
+                    <tr>
+                      <th>Distância</th>
+                      <th>Região</th>
+                      <th>Paragens</th>
+                      <th>Peso</th>
+                      <th>Motorista(s)</th>
+                      <th>Não alocado</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td
+                        colspan="6"
+                        style="text-align: center; color: var(--text-muted)"
+                      >
+                        Processe o roteiro para ver o resumo.
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // ========== DADOS GLOBAIS ==========
+      const CIDADE_BASE_PADRAO = "LONDRINA";
+      const LONDRINA_LAT = -23.3106;
+      const LONDRINA_LNG = -51.1628;
+      const geoDB = {
+        ABATIÁ: 125,
+        "ALVORADA DO SUL": 70,
+        ANDIRÁ: 120,
+        APUCARANA: 54,
+        ARAPONGAS: 37,
+        ARAPOTI: 235,
+        ASSAÍ: 70,
+        BANDEIRANTES: 105,
+        "BARRA DO JACARÉ": 140,
+        "BELA VISTA DO PARAÍSO": 45,
+        CALIFÓRNIA: 70,
+        CÂMBARA: 135,
+        CAMBÉ: 12,
+        CARAMBEÍ: 250,
+        CARLÓPOLIS: 190,
+        CASTRO: 260,
+        CONGONHINHAS: 115,
+        "CONSELHEIRO MAIRINCK": 160,
+        "CORNÉLIO PROCÓPIO": 70,
+        CURIÚVA: 145,
+        FIGUEIRA: 165,
+        FLORESTÓPOLIS: 110,
+        MARINGÁ: 100,
+        GUAPIRAMA: 145,
+        IBAITI: 175,
+        IBIPORÃ: 15,
+        IMBAÚ: 185,
+        ITAMBARACÁ: 120,
+        JABOTI: 170,
+        JACAREZINHO: 175,
+        JAGUAPITÃ: 55,
+        JAGUARIAÍVA: 250,
+        JAPIRA: 165,
+        JATAIZINHO: 25,
+        "JOAQUIM TÁVORA": 170,
+        "JUNDIAÍ DO SUL": 145,
+        LEÓPOLIS: 90,
+        LONDRINA: 0,
+        "MARILÂNDIA DO SUL": 85,
+        "MAUÁ DA SERRA": 105,
+        "NOVA AMÉRICA DA COLINA": 85,
+        "NOVA FÁTIMA": 95,
+        "NOVA SANTA BÁRBARA": 90,
+        ORTIGUEIRA: 145,
+        PINHALÃO: 185,
+        "PIRAÍ DO SUL": 230,
+        PORECATU: 90,
+        "PRADO FERREIRA": 82,
+        "PRIMEIRO DE MAIO": 75,
+        QUATIGUÁ: 185,
+        "RANCHO ALEGRE": 100,
+        RESERVA: 200,
+        "RIBEIRÃO CLARO": 200,
+        "RIBEIRÃO DO PINHAL": 120,
+        ROLÂNDIA: 25,
+        "SALTO DO ITARARÉ": 210,
+        "SANTA AMÉLIA": 115,
+        "SANTA CECÍLIA DO PAVÃO": 105,
+        "SANTA MARIANA": 90,
+        "SANTANA DO ITARARÉ": 220,
+        "SANTO ANTÔNIO DA PLATINA": 155,
+        "SANTO ANTÔNIO DO PARAÍSO": 100,
+        "SÃO JERÔNIMO DA SERRA": 115,
+        "SÃO JOSÉ DA BOA VISTA": 200,
+        "SÃO SEBASTIÃO DA AMOREIRA": 95,
+        SAPOPEMA: 125,
+        SENGÉS: 285,
+        SERTANEJA: 100,
+        SERTANÓPOLIS: 62,
+        "SIQUEIRA CAMPOS": 180,
+        TAMARANA: 60,
+        "TELEMACO BORBA": 190,
+        TIBAGI: 215,
+        TOMAZINA: 180,
+        URAÍ: 55,
+        VENTANIA: 180,
+        "WENCESLAU BRAZ": 195,
+      };
+
+      /* const dicionarioApelidos = {
+        // Seus apelidos de 2 letras
+        "AB": "ABATIÁ",
+        "AS": "ALVORADA DO SUL",
+        "AN": "ANDIRÁ",
+        "AP": "APUCARANA",
+        "AG": "ARAPONGAS",
+        "AT": "ARAPOTI",
+        "AI": "ASSAÍ",
+        "BA": "BANDEIRANTES",
+        "BJ": "BARRA DO JACARÉ",
+        "BV": "BELA VISTA DO PARAÍSO",
+        "CA": "CALIFÓRNIA",
+        "CM": "CÂMBARA",
+        "CB": "CAMBÉ",
+        "CR": "CARAMBEÍ",
+        "CL": "CARLÓPOLIS",
+        "CT": "CASTRO",
+        "CG": "CONGONHINHAS",
+        "CK": "CONSELHEIRO MAIRINCK",
+        "CP": "CORNÉLIO PROCÓPIO",
+        "CU": "CURIÚVA",
+        "FI": "FIGUEIRA",
+        "FL": "FLORESTÓPOLIS",
+        "MG": "MARINGÁ",
+        "GU": "GUAPIRAMA",
+        "IB": "IBAITI",
+        "IP": "IBIPORÃ",
+        "IM": "IMBAÚ",
+        "IT": "ITAMBARACÁ",
+        "JA": "JABOTI",
+        "JZ": "JACAREZINHO",
+        "JP": "JAGUAPITÃ",
+        "JV": "JAGUARIAÍVA",
+        "JR": "JAPIRA",
+        "JT": "JATAIZINHO",
+        "JQ": "JOAQUIM TÁVORA",
+        "JS": "JUNDIAÍ DO SUL",
+        "LE": "LEÓPOLIS",
+        "LO": "LONDRINA",
+        "MS": "MARILÂNDIA DO SUL",
+        "MA": "MAUÁ DA SERRA",
+        "NA": "NOVA AMÉRICA DA COLINA",
+        "NF": "NOVA FÁTIMA",
+        "NB": "NOVA SANTA BÁRBARA",
+        "OR": "ORTIGUEIRA",
+        "PI": "PINHALÃO",
+        "PS": "PIRAÍ DO SUL",
+        "PO": "PORECATU",
+        "PF": "PRADO FERREIRA",
+        "PM": "PRIMEIRO DE MAIO",
+        "QU": "QUATIGUÁ",
+        "RA": "RANCHO ALEGRE",
+        "RE": "RESERVA",
+        "RC": "RIBEIRÃO CLARO",
+        "RP": "RIBEIRÃO DO PINHAL",
+        "RO": "ROLÂNDIA",
+        "SI": "SALTO DO ITARARÉ",
+        "SA": "SANTA AMÉLIA",
+        "SC": "SANTA CECÍLIA DO PAVÃO",
+        "SM": "SANTA MARIANA",
+        "SN": "SANTANA DO ITARARÉ",
+        "SP": "SANTO ANTÔNIO DA PLATINA",
+        "SO": "SANTO ANTÔNIO DO PARAÍSO",
+        "SJ": "SÃO JERÔNIMO DA SERRA",
+        "SB": "SÃO JOSÉ DA BOA VISTA",
+        "SS": "SÃO SEBASTIÃO DA AMOREIRA",
+        "SP": "SAPOPEMA",
+        "SE": "SENGÉS",
+        "ST": "SERTANEJA",
+        "SR": "SERTANÓPOLIS",
+        "SC": "SIQUEIRA CAMPOS",
+        "TA": "TAMARANA",
+        "TB": "TELEMACO BORBA",
+        "TI": "TIBAGI",
+        "TO": "TOMAZINA",
+        "UR": "URAÍ",
+        "VE": "VENTANIA",
+        "WB": "WENCESLAU BRAZ",
+
+        // Entradas de compatibilidade originais
+        "ST DA PLATINA": "SANTO ANTÔNIO DA PLATINA",
+        "STA ANTONIO": "SANTO ANTÔNIO DA PLATINA",
+        "S.A. PLATINA": "SANTO ANTÔNIO DA PLATINA",
+        "BONIF ST DA PLATINA": "SANTO ANTÔNIO DA PLATINA",
+      }; */
+
+      const dicionarioApelidos = {
+        "AB": "ABATIÁ", "AS": "ALVORADA DO SUL", "AN": "ANDIRÁ", "AP": "APUCARANA",
+        "AR": "ARAPONGAS", "AT": "ARAPOTI", "AI": "ASSAÍ", "BA": "BANDEIRANTES",
+        "BJ": "BARRA DO JACARÉ", "BV": "BELA VISTA DO PARAÍSO", "CA": "CALIFÓRNIA",
+        "CM": "CÂMBARA", "CB": "CAMBÉ", "CR": "CARAMBEÍ", "CL": "CARLÓPOLIS",
+        "CT": "CASTRO", "CG": "CONGONHINHAS", "CK": "CONSELHEIRO MAIRINCK",
+        "CP": "CORNÉLIO PROCÓPIO", "CU": "CURIÚVA", "FI": "FIGUEIRA",
+        "FL": "FLORESTÓPOLIS", "MG": "MARINGÁ", "GU": "GUAPIRAMA", "IB": "IBAITI",
+        "IP": "IBIPORÃ", "IM": "IMBAÚ", "IT": "ITAMBARACÁ", "JA": "JABOTI",
+        "JZ": "JACAREZINHO", "JG": "JAGUAPITÃ", "JV": "JAGUARIAÍVA", "JP": "JAPIRA",
+        "JT": "JATAIZINHO", "JQ": "JOAQUIM TÁVORA", "JS": "JUNDIAÍ DO SUL",
+        "LE": "LEÓPOLIS", "LO": "LONDRINA", "MS": "MARILÂNDIA DO SUL",
+        "MA": "MAUÁ DA SERRA", "NC": "NOVA AMÉRICA DA COLINA", "NF": "NOVA FÁTIMA",
+        "NB": "NOVA SANTA BÁRBARA", "OR": "ORTIGUEIRA", "PI": "PINHALÃO",
+        "PS": "PIRAÍ DO SUL", "PO": "PORECATU", "PF": "PRADO FERREIRA",
+        "PM": "PRIMEIRO DE MAIO", "QU": "QUATIGUÁ", "RA": "RANCHO ALEGRE",
+        "RE": "RESERVA", "RC": "RIBEIRÃO CLARO", "RP": "RIBEIRÃO DO PINHAL",
+        "RO": "ROLÂNDIA", "SI": "SALTO DO ITARARÉ", "SA": "SANTA AMÉLIA",
+        "SC": "SANTA CECÍLIA DO PAVÃO", "SM": "SANTA MARIANA", "SN": "SANTANA DO ITARARÉ",
+        "SP": "SANTO ANTÔNIO DA PLATINA", "SO": "SANTO ANTÔNIO DO PARAÍSO",
+        "SJ": "SÃO JERÔNIMO DA SERRA", "SB": "SÃO JOSÉ DA BOA VISTA",
+        "SS": "SÃO SEBASTIÃO DA AMOREIRA", "SE": "SENGÉS", "ST": "SERTANEJA",
+        "SR": "SERTANÓPOLIS", "SC": "SIQUEIRA CAMPOS", "TA": "TAMARANA",
+        "TB": "TELEMACO BORBA", "TI": "TIBAGI", "TO": "TOMAZINA", "UR": "URAÍ",
+        "VE": "VENTANIA", "WB": "WENCESLAU BRAZ", 
+        // Entradas de compatibilidade originais
+        "ST DA PLATINA": "SANTO ANTÔNIO DA PLATINA",
+        "STA ANTONIO": "SANTO ANTÔNIO DA PLATINA",
+        "S.A. PLATINA": "SANTO ANTÔNIO DA PLATINA",
+        "BONIF ST DA PLATINA": "SANTO ANTÔNIO DA PLATINA",
+      };
+
+      const CORES_MOTORISTAS = [
+        "#0d9488",
+        "#2563eb",
+        "#7c3aed",
+        "#c2410c",
+        "#0e7490",
+        "#4f46e5",
+        "#059669",
+        "#b45309",
+      ];
+      const STORAGE_MOTORISTAS = "roteirizador_motoristas";
+      const STORAGE_CARGAS = "roteirizador_cargas";
+      const STORAGE_GEO_COORDS = "roteirizador_geo_coords_cache_v1";
+
+      let motoristas = [];
+      let ultimoResultado = {
+        drivers: [],
+        regions: [],
+        result: {},
+        groups: {},
+        efficiency: 0,
+        alertas: [],
+      };
+      let geoCoordsCache = {};
+
+      function abrirMapaComparativo() {
+        window.open("https://anderbith.github.io/Mapa-Regi-o-atendida-distribuidora-ESD/", "_blank");
+      }
+
+      // ========== PERSISTÊNCIA ==========
+      function salvarDados() {
+        try {
+          localStorage.setItem(STORAGE_MOTORISTAS, JSON.stringify(motoristas));
+          localStorage.setItem(
+            STORAGE_CARGAS,
+            document.getElementById("inputCargas").value.trim(),
+          );
+        } catch (e) {
+          console.warn("Erro ao salvar:", e);
+        }
+      }
+
+      function carregarDados() {
+        try {
+          const m = localStorage.getItem(STORAGE_MOTORISTAS);
+          if (m) {
+            const parsed = JSON.parse(m);
+            motoristas = Array.isArray(parsed)
+              ? parsed.map((d) => ({
+                  id: d.id,
+                  nome: (d.nome || "").toString().toUpperCase(),
+                  veiculo: (d.veiculo || "").toString().toUpperCase(),
+                  capacidade: Number(d.capacidade) || 0,
+                  baseCidade: (d.baseCidade || "")
+                    .toString()
+                    .toUpperCase()
+                    .trim(),
+                }))
+              : [];
+          }
+          const c = localStorage.getItem(STORAGE_CARGAS);
+          if (c) document.getElementById("inputCargas").value = c;
+
+          const g = localStorage.getItem(STORAGE_GEO_COORDS);
+          if (g) {
+            const parsedG = JSON.parse(g);
+            if (parsedG && typeof parsedG === "object")
+              geoCoordsCache = parsedG;
+          }
+        } catch (e) {
+          console.warn("Erro ao carregar:", e);
+        }
+      }
+
+      // ========== MOTORISTAS (CRUD) ==========
+
+      // simples loader de frota via texto
+      function carregarMotoristasTexto(silent = false) {
+        const txt = document.getElementById("inputMotoristas").value || "";
+        const linhas = String(txt).trim().split(/\r?\n/).filter(Boolean);
+        motoristas = [];
+        let nextId = 1;
+        for (const l of linhas) {
+          const parts = l
+            .split("/")
+            .map((p) => p.trim())
+            .filter(Boolean);
+          if (parts.length < 3) continue;
+          const nome = parts[0].toUpperCase();
+          const veiculo = parts[1].toUpperCase();
+          const cap = parseFloat(parts[2].replace(",", ".")) || 0;
+          motoristas.push({
+            id: nextId++,
+            nome,
+            veiculo,
+            capacidade: cap,
+            baseCidade: CIDADE_BASE_PADRAO,
+          });
+        }
+        salvarDados();
+        if (!silent)
+          alert("Frota carregada: " + motoristas.length + " motoristas.");
+      }
+
+      // ========== PARSER E NORMALIZAÇÃO ==========
+      function normalizarTexto(txt) {
+        return String(txt || "")
+          .normalize("NFD")
+          .replace(/[\u0300-\u036f]/g, "")
+          .replace(/[^\w\s]/g, "")
+          .replace(/\s+/g, " ")
+          .toUpperCase()
+          .trim();
+      }
+
+      function encontrarCidade(texto) {
+        let raw = String(texto || "").trim().toUpperCase();
+        if (!raw) return "DESCONHECIDO";
+
+        // Divide por espaços, barras ou hífens para achar a sigla isolada
+        const partes = raw.split(/[\s\//-]+/);
+
+        // 1. Tenta achar se alguma parte é uma sigla do dicionário (ex: NC)
+        for (const p of partes) {
+            if (dicionarioApelidos[p]) {
+                return dicionarioApelidos[p];
+            }
+        }
+
+        // 2. Se não achou sigla, tenta o nome completo (lógica original)
+        const norm = normalizarTexto(raw);
+        const cidadesConhecidas = Object.keys(geoDB);
+        
+        // Verifica se o nome da cidade está contido no texto
+        for (const cidade of cidadesConhecidas) {
+            if (norm.includes(cidade)) return cidade;
+        }
+
+        return raw; 
+      }
+
+      /* function encontrarCidade(texto) {
+        const raw = String(texto || "").trim();
+        if (!raw) return "DESCONHECIDO";
+        const norm = normalizarTexto(raw);
+
+        // Considera que a cidade está sempre no final do texto.
+        // Ex.: "BONIF ORTIGUEIRA" -> cidade = "ORTIGUEIRA"
+        const palavras = norm.split(" ").filter(Boolean);
+        if (!palavras.length) return "DESCONHECIDO";
+
+        // Gera todos os sufixos possíveis (do fim para o começo)
+        // ["BONIF", "ST", "DA", "PLATINA"] ->
+        // ["PLATINA", "DA PLATINA", "ST DA PLATINA", "BONIF ST DA PLATINA"]
+        const sufixos = [];
+        for (let i = palavras.length - 1; i >= 0; i--) {
+          sufixos.push(palavras.slice(i).join(" "));
+        }
+
+        // 1) Verifica dicionário de apelidos usando sufixo exato
+        for (const [apelido, cidadeReal] of Object.entries(dicionarioApelidos)) {
+          const apelidoNorm = normalizarTexto(apelido);
+          if (sufixos.includes(apelidoNorm)) return cidadeReal;
+        }
+
+        // 2) Verifica se algum sufixo bate exatamente com uma cidade do geoDB
+        const cidades = Object.keys(geoDB);
+        for (const c of cidades) {
+          const cNorm = normalizarTexto(c);
+          if (sufixos.includes(cNorm)) return c;
+        }
+
+        // Se não estiver no geoDB, mantém o texto informado para permitir geocoding/Leaflet.
+        return raw.toUpperCase();
+      } */
+
+      // ========== CONVERTER CIDADES PARA NOMES COMPLETOS ==========
+      function obterNomeCidadeCompleto(abreviacao) {
+        return encontrarCidade(abreviacao);
+      }
+
+      function parseCargas(texto) {
+        const grupos = {};
+        const linhas = String(texto).trim().split("\n").filter(Boolean);
+        for (const line of linhas) {
+          const parts = line.split("/").map((p) => p.trim());
+          if (parts.length < 3) continue;
+          let roteiro = null,
+            cliente = parts[0];
+          const m = parts[0].match(/^(\d+)\s*(.*)$/);
+          if (m) {
+            roteiro = m[1];
+            cliente = m[2] || parts[1];
+          }
+          const cidade = encontrarCidade(parts[1]);
+          const peso =
+            parseFloat(String(parts[2]).replace(/\./g, "").replace(",", ".")) ||
+            0;
+          if (!grupos[cidade])
+            grupos[cidade] = { totalWeight: 0, routes: {}, clients: [] };
+          const routeKey =
+            roteiro || "R_" + (grupos[cidade].clients.length + 1);
+          if (!grupos[cidade].routes[routeKey])
+            grupos[cidade].routes[routeKey] = {
+              weight: 0,
+              clients: [],
+              label: routeKey,
+            };
+          grupos[cidade].routes[routeKey].weight = Number(
+            (grupos[cidade].routes[routeKey].weight + peso).toFixed(2),
+          );
+          grupos[cidade].routes[routeKey].clients.push(cliente || parts[1]);
+          grupos[cidade].totalWeight = Number(
+            (grupos[cidade].totalWeight + peso).toFixed(2),
+          );
+          grupos[cidade].clients.push({
+            name: cliente,
+            weight: peso,
+            route: routeKey,
+          });
+        }
+        return grupos;
+      }
+
+      // ========== DISTÂNCIA (KM) ==========
+      function calcularDistancia(cidade) {
+        return geoDB[cidade] !== undefined ? geoDB[cidade] : 999;
+      }
+
+      // ========== GEOLOCALIZAÇÃO (CIDADE -> LAT/LNG) + DISTÂNCIA REAL ==========
+      function sleep(ms) {
+        return new Promise((r) => setTimeout(r, ms));
+      }
+
+      function salvarGeoCache() {
+        try {
+          localStorage.setItem(
+            STORAGE_GEO_COORDS,
+            JSON.stringify(geoCoordsCache),
+          );
+        } catch (e) {
+          /* ignore */
+        }
+      }
+
+      function cityCacheKey(cidade) {
+        const k = normalizarTexto(cidade);
+        return k && k !== "DESCONHECIDO" ? k : "";
+      }
+
+      function montarConsultaCidade(cidade) {
+        const c = String(cidade || "").trim();
+        if (!c) return "";
+        const norm = normalizarTexto(c);
+        const hasBrasil = norm.includes("BRASIL") || norm.includes("BRAZIL");
+        const hasPR =
+          /\bPR\b/.test(norm) ||
+          norm.includes("PARANA") ||
+          norm.includes("PARANÁ");
+        if (hasBrasil || hasPR) return c;
+        return `${c}, Paraná, Brasil`;
+      }
+
+      async function geocodificarCidade(cidade) {
+        const key = cityCacheKey(cidade);
+        if (!key) return null;
+
+        const cached = geoCoordsCache[key];
+        if (
+          cached &&
+          Number.isFinite(Number(cached.lat)) &&
+          Number.isFinite(Number(cached.lng))
+        )
+          return cached;
+
+        const q = montarConsultaCidade(cidade);
+        if (!q) return null;
+
+        const url = `https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&addressdetails=1&q=${encodeURIComponent(q)}`;
+        const res = await fetch(url, {
+          headers: { "Accept-Language": "pt-BR" },
+        });
+        if (!res.ok) return null;
+        const data = await res.json();
+        if (!Array.isArray(data) || !data.length) return null;
+
+        const item = data[0];
+        const coords = {
+          lat: Number(item.lat),
+          lng: Number(item.lon),
+          displayName: item.display_name || "",
+          ts: Date.now(),
+        };
+
+        if (!Number.isFinite(coords.lat) || !Number.isFinite(coords.lng))
+          return null;
+        geoCoordsCache[key] = coords;
+        salvarGeoCache();
+        return coords;
+      }
+
+      function toRad(deg) {
+        return (deg * Math.PI) / 180;
+      }
+
+      function haversineKm(a, b) {
+        const R = 6371;
+        const dLat = toRad(b.lat - a.lat);
+        const dLng = toRad(b.lng - a.lng);
+        const lat1 = toRad(a.lat);
+        const lat2 = toRad(b.lat);
+        const s =
+          Math.sin(dLat / 2) ** 2 +
+          Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLng / 2) ** 2;
+        const c = 2 * Math.atan2(Math.sqrt(s), Math.sqrt(1 - s));
+        return R * c;
+      }
+
+      function calcularDistanciaHaversine(lat1, lon1, lat2, lon2) {
+        const R = 6371;
+        const dLat = toRad(lat2 - lat1);
+        const dLng = toRad(lon2 - lon1);
+        const radLat1 = toRad(lat1);
+        const radLat2 = toRad(lat2);
+        const a =
+          Math.sin(dLat / 2) ** 2 +
+          Math.cos(radLat1) * Math.cos(radLat2) * Math.sin(dLng / 2) ** 2;
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        return R * c;
+      }
+
+      function distanciaKm(a, b) {
+        return calcularDistanciaHaversine(a.lat, a.lng, b.lat, b.lng);
+      }
+
+      async function precacheCidadesSequencial(cidades) {
+        const uniq = [
+          ...new Set(
+            (cidades || []).map((c) => String(c || "").trim()).filter(Boolean),
+          ),
+        ];
+        for (const cidade of uniq) {
+          const key = cityCacheKey(cidade);
+          if (!key) continue;
+          if (geoCoordsCache[key]) continue;
+          try {
+            await geocodificarCidade(cidade);
+          } catch (e) {
+            /* ignore */
+          }
+          await sleep(1100);
+        }
+      }
+
+      async function atualizarProximasEntregasAsync() {
+        const { drivers } = ultimoResultado;
+        if (!drivers || !drivers.length) return;
+
+        const todasCidades = [];
+        for (const d of drivers) {
+          const base = d.baseCidade || CIDADE_BASE_PADRAO;
+          todasCidades.push(base);
+          for (const a of d.allocations || []) {
+            if (a && a.regiao) todasCidades.push(a.regiao);
+          }
+        }
+
+        await precacheCidadesSequencial(todasCidades);
+
+        for (const d of drivers) {
+          const baseCity = d.baseCidade || CIDADE_BASE_PADRAO;
+          const baseCoords = geoCoordsCache[cityCacheKey(baseCity)] || null;
+          const nextEl = document.getElementById(`driver-next-${d.id}`);
+          const pathEl = document.getElementById(`driver-path-${d.id}`);
+
+          if (!baseCoords) {
+            if (nextEl)
+              nextEl.textContent = "cidade base não localizada (sem lat/lng)";
+            continue;
+          }
+
+          const candidatas = [
+            ...new Set(
+              (d.allocations || [])
+                .map((a) => a.regiao)
+                .filter((c) => c && c !== "DESCONHECIDO"),
+            ),
+          ].filter((c) => normalizarTexto(c) !== normalizarTexto(baseCity));
+
+          let best = null;
+          for (const cidade of candidatas) {
+            const coords = geoCoordsCache[cityCacheKey(cidade)] || null;
+            if (!coords) continue;
+            const km = distanciaKm(baseCoords, coords);
+            if (!Number.isFinite(km)) continue;
+            if (!best || km < best.km) best = { cidade, km };
+          }
+
+          if (!best) {
+            if (nextEl)
+              nextEl.textContent = "nenhuma entrega válida para comparar";
+            continue;
+          }
+
+          d.proximaCidade = best.cidade;
+          d.proximaKm = best.km;
+
+          if (nextEl)
+            nextEl.textContent = `${obterNomeCidadeCompleto(best.cidade)} (${best.km.toFixed(1)} km)`;
+          if (pathEl) {
+            const outras = [...new Set(d.cidades || [])].filter(
+              (c) => c && normalizarTexto(c) !== normalizarTexto(baseCity),
+            );
+            const resto = outras.filter(
+              (c) => normalizarTexto(c) !== normalizarTexto(best.cidade),
+            );
+            // Converter todos os nomes para completos
+            const baseCompleto = obterNomeCidadeCompleto(baseCity);
+            const melhorCompleto = obterNomeCidadeCompleto(best.cidade);
+            const restoCompleto = resto.map((c) => obterNomeCidadeCompleto(c));
+            pathEl.textContent = [
+              baseCompleto,
+              melhorCompleto,
+              ...restoCompleto,
+            ].join(" → ");
+          }
+        }
+      }
+
+      // ========== ORDEM DE ROTA (TSP SIMPLIFICADO: NEAREST NEIGHBOR A PARTIR DE LONDRINA) ==========
+      function ordemRotaOtimizada(cidades, baseCity) {
+        if (!cidades.length) return [];
+        const lista = [...new Set(cidades)];
+        const start =
+          (baseCity || CIDADE_BASE_PADRAO || "")
+            .toString()
+            .trim()
+            .toUpperCase() || CIDADE_BASE_PADRAO;
+        const rest = lista
+          .filter((c) => c !== start)
+          .sort((a, b) => (geoDB[a] ?? 999) - (geoDB[b] ?? 999));
+        return [start, ...rest];
+      }
+
+      async function ordenarRotasPorProximidade(drivers) {
+        if (!drivers || !drivers.length) return;
+        const todas = [];
+        for (const d of drivers) {
+          const base = d.baseCidade || CIDADE_BASE_PADRAO;
+          todas.push(base);
+          for (const c of d.cidades || []) if (c) todas.push(c);
+        }
+        await precacheCidadesSequencial(todas);
+
+        for (const d of drivers) {
+          const baseCity = d.baseCidade || CIDADE_BASE_PADRAO;
+          const startKey = cityCacheKey(baseCity);
+          const startCoords = geoCoordsCache[startKey] || null;
+          const candidatos = [
+            ...new Set(
+              (d.cidades || []).filter(
+                (c) => c && normalizarTexto(c) !== normalizarTexto(baseCity),
+              ),
+            ),
+          ];
+          const order = [];
+          if (!startCoords) {
+            order.push(baseCity, ...candidatos);
+            d.ordenacao = order;
+            continue;
+          }
+
+          let current = { lat: startCoords.lat, lng: startCoords.lng };
+          order.push(baseCity);
+          const remaining = candidatos.slice();
+
+          while (remaining.length) {
+            let bestIdx = -1;
+            let bestDist = Infinity;
+            for (let i = 0; i < remaining.length; i++) {
+              const c = remaining[i];
+              const coords = geoCoordsCache[cityCacheKey(c)];
+              if (!coords) continue;
+              const km = distanciaKm(current, coords);
+              if (km < bestDist) {
+                bestDist = km;
+                bestIdx = i;
+              }
+            }
+            if (bestIdx === -1) {
+              order.push(...remaining);
+              break;
+            }
+            const chosen = remaining.splice(bestIdx, 1)[0];
+            order.push(chosen);
+            const chCoords = geoCoordsCache[cityCacheKey(chosen)];
+            current = { lat: chCoords.lat, lng: chCoords.lng };
+          }
+
+          d.ordenacao = order;
+        }
+      }
+
+      // ========== ALGORITMO DE DISTRIBUIÇÃO ==========
+      /* async function distribuirCargas() {
+        if (document.getElementById("inputMotoristas")) {
+          carregarMotoristasTexto(true);
+        }
+        const textoCargas = document.getElementById("inputCargas").value.trim();
+        if (!textoCargas) {
+          alert("Informe as cargas do dia.");
+          return;
+        }
+        if (!motoristas.length) {
+          alert("Cadastre ao menos um motorista.");
+          return;
+        }
+
+        salvarDados();
+
+        const groups = parseCargas(textoCargas);
+        const cargos = [];
+        for (const [regiao, info] of Object.entries(groups)) {
+          for (const [routeKey, rota] of Object.entries(info.routes || {})) {
+            cargos.push({
+              regiao,
+              routeKey,
+              peso: rota.weight,
+              label: rota.label || routeKey,
+            });
+          }
+        }
+
+        const cidadesParaCache = [
+          CIDADE_BASE_PADRAO || "LONDRINA",
+          ...new Set(cargos.map((c) => c.regiao)),
+        ];
+        try {
+          await precacheCidadesSequencial(cidadesParaCache);
+        } catch (e) {
+          console.warn("Erro ao pré-cache de coordenadas", e);
+        }
+
+        const drivers = motoristas
+          .map((d, i) => ({
+            id: d.id,
+            nome: d.nome,
+            veiculo: d.veiculo,
+            capacidade: d.capacidade,
+            baseCidade: CIDADE_BASE_PADRAO,
+            usado: 0,
+            restante: d.capacidade,
+            allocations: [],
+            cidades: [],
+            ordenacao: [],
+          }))
+          .sort((a, b) => b.capacidade - a.capacidade);
+
+        const result = {};
+        const alertas = [];
+        for (const regiao of Object.keys(groups)) {
+          result[regiao] = { ...groups[regiao], allocations: [], unallocated: 0 };
+        }
+
+        const baseCoords = { lat: LONDRINA_LAT, lng: LONDRINA_LNG };
+        let remaining = [...cargos];
+
+        for (const d of drivers) {
+          if (remaining.length === 0) break;
+
+          // Busca a carga mais distante que caiba no motorista
+          let idxFar = -1;
+          let maxDist = -1;
+
+          for (let i = 0; i < remaining.length; i++) {
+            const c = remaining[i];
+            if (c.peso <= d.restante) {
+              const coords = geoCoordsCache[cityCacheKey(c.regiao)];
+              const dist = coords ? distanciaKm(baseCoords, coords) : 0;
+              if (dist > maxDist) {
+                maxDist = dist;
+                idxFar = i;
+              }
+            }
+          }
+
+          // Se nenhuma carga couber (nem a mais distante), pula para o próximo motorista
+          if (idxFar === -1) continue;
+
+          const assign = (c) => {
+            d.allocations.push({ ...c });
+            d.restante = Number((d.restante - c.peso).toFixed(2));
+            d.usado = Number((d.usado + c.peso).toFixed(2));
+            if (!d.cidades.includes(c.regiao)) d.cidades.push(c.regiao);
+            if (result[c.regiao]) {
+              result[c.regiao].allocations.push({
+                driverName: d.nome,
+                weight: c.peso,
+                client: c.routeKey,
+              });
+            }
+          };
+
+          const seed = remaining.splice(idxFar, 1)[0];
+          assign(seed);
+
+          // Tenta preencher o restante do motorista com as cargas mais próximas da última adicionada
+          let currentCoords = geoCoordsCache[cityCacheKey(seed.regiao)] || baseCoords;
+          
+          let preenchendo = true;
+          while (preenchendo && remaining.length > 0) {
+            let idxBest = -1;
+            let bestDist = Infinity;
+
+            for (let i = 0; i < remaining.length; i++) {
+              const c = remaining[i];
+              if (c.peso <= d.restante) {
+                const coords = geoCoordsCache[cityCacheKey(c.regiao)];
+                const dist = coords ? distanciaKm(currentCoords, coords) : 9999;
+                if (dist < bestDist) {
+                  bestDist = dist;
+                  idxBest = i;
+                }
+              }
+            }
+
+            if (idxBest !== -1) {
+              const next = remaining.splice(idxBest, 1)[0];
+              assign(next);
+              currentCoords = geoCoordsCache[cityCacheKey(next.regiao)] || currentCoords;
+            } else {
+              preenchendo = false;
+            }
+          }
+        }
+
+        // Sobras
+        for (const c of remaining) {
+          if (result[c.regiao]) {
+            result[c.regiao].unallocated = Number((result[c.regiao].unallocated + c.peso).toFixed(2));
+          }
+          alertas.push({
+            tipo: "capacidade",
+            msg: "Capacidade insuficiente.",
+            peso: c.peso,
+            regiao: c.regiao,
+            routeKey: c.routeKey,
+          });
+        }
+
+        const totalCap = drivers.reduce((s, d) => s + d.capacidade, 0);
+        const totalUsado = drivers.reduce((s, d) => s + d.usado, 0);
+        
+        ultimoResultado = {
+          drivers,
+          regions: Object.keys(groups).sort((a,b) => (geoDB[a] ?? 999) - (geoDB[b] ?? 999)),
+          result,
+          groups,
+          efficiency: totalCap > 0 ? Math.round((totalUsado / totalCap) * 100) : 0,
+          alertas,
+        };
+        await ordenarRotasPorProximidade(ultimoResultado.drivers);
+        renderResultado();
+      } */
+
+      async function distribuirCargas() {
+        // sempre ler a frota diretamente do textarea antes de distribuir
+        if (document.getElementById("inputMotoristas")) {
+          carregarMotoristasTexto(true);
+        }
+        const textoCargas = document.getElementById("inputCargas").value.trim();
+        if (!textoCargas) {
+          alert("Informe as cargas do dia.");
+          return;
+        }
+        if (!motoristas.length) {
+          alert("Cadastre ao menos um motorista.");
+          return;
+        }
+
+        salvarDados();
+
+        // monta estrutura de cargas a partir do texto
+        const groups = parseCargas(textoCargas);
+        const cargos = [];
+        for (const [regiao, info] of Object.entries(groups)) {
+          for (const [routeKey, rota] of Object.entries(info.routes || {})) {
+            cargos.push({
+              regiao,
+              routeKey,
+              peso: rota.weight,
+              label: rota.label || routeKey,
+            });
+          }
+        }
+
+        // pré‑cache de coordenadas (CAMBÉ + cidades das cargas)
+        const cidadesParaCache = [
+          CIDADE_BASE_PADRAO || "CAMBÉ",
+          ...new Set(cargos.map((c) => c.regiao)),
+        ];
+        try {
+          await precacheCidadesSequencial(cidadesParaCache);
+        } catch (e) {
+          console.warn("Erro ao pré-cache de coordenadas", e);
+        }
+
+        // prepara motoristas ordenados por capacidade (maior primeiro)
+        const drivers = motoristas
+          .map((d, i) => ({
+            id: d.id,
+            nome: d.nome,
+            veiculo: d.veiculo,
+            capacidade: d.capacidade,
+            baseCidade:
+              (d.baseCidade || CIDADE_BASE_PADRAO || "")
+                .toString()
+                .trim()
+                .toUpperCase() || CIDADE_BASE_PADRAO,
+            usado: 0,
+            restante: d.capacidade,
+            allocations: [],
+            cidades: [],
+            ordenacao: [],
+          }))
+          .sort((a, b) => b.capacidade - a.capacidade);
+
+        const regioesOrdenadas = Object.keys(groups).sort((a, b) => {
+          if (a === CIDADE_BASE_PADRAO) return -1;
+          if (b === CIDADE_BASE_PADRAO) return 1;
+          return (geoDB[a] ?? 999) - (geoDB[b] ?? 999);
+        });
+
+        const result = {};
+        const alertas = [];
+
+        for (const regiao of Object.keys(groups)) {
+          result[regiao] = {
+            ...groups[regiao],
+            allocations: [],
+            unallocated: 0,
+          };
+        }
+
+        const baseCoords = {
+          lat: LONDRINA_LAT,
+          lng: LONDRINA_LNG,
+        };
+
+        const remaining = cargos.slice();
+
+        // laço de motorista após motorista
+        for (const d of drivers) {
+          if (!remaining.length) break;
+
+          // escolhe a carga mais distante de CAMBÉ (semente)
+          let idxFar = -1;
+          let maxDist = -1;
+          for (let i = 0; i < remaining.length; i++) {
+            const c = remaining[i];
+            const coords = geoCoordsCache[cityCacheKey(c.regiao)];
+            if (!coords) continue;
+            const dist = distanciaKm(baseCoords, coords);
+            if (dist > maxDist) {
+              maxDist = dist;
+              idxFar = i;
+            }
+          }
+          if (idxFar === -1) continue;
+
+          const seed = remaining.splice(idxFar, 1)[0];
+          if (seed.peso > d.restante) {
+            // não cabe nem a carga mais distante, pula motorista
+            remaining.unshift(seed);
+            continue;
+          }
+
+          const assign = (c) => {
+            d.allocations.push({
+              regiao: c.regiao,
+              routeKey: c.routeKey,
+              peso: c.peso,
+              label: c.label,
+            });
+            d.restante = Number((d.restante - c.peso).toFixed(2));
+            d.usado = Number((d.usado + c.peso).toFixed(2));
+            if (!d.cidades.includes(c.regiao)) d.cidades.push(c.regiao);
+            if (result[c.regiao]) {
+              result[c.regiao].allocations.push({
+                driverName: d.nome,
+                weight: c.peso,
+                client: c.routeKey,
+              });
+            }
+          };
+
+          assign(seed);
+          d.ordenacao.push(seed.regiao);
+          let currentCoords =
+            geoCoordsCache[cityCacheKey(seed.regiao)] || baseCoords;
+
+          // agregar cargas vizinhas enquanto couber
+          while (true) {
+            if (!remaining.length) break;
+            let idxBest = -1;
+            let bestDist = Infinity;
+            for (let i = 0; i < remaining.length; i++) {
+              const c = remaining[i];
+              const coords = geoCoordsCache[cityCacheKey(c.regiao)];
+              if (!coords) continue;
+              const dist = distanciaKm(currentCoords, coords);
+              if (dist < bestDist) {
+                bestDist = dist;
+                idxBest = i;
+              }
+            }
+            if (idxBest === -1) break;
+            const next = remaining[idxBest];
+            if (next.peso <= d.restante) {
+              remaining.splice(idxBest, 1);
+              assign(next);
+              d.ordenacao.push(next.regiao);
+              currentCoords =
+                geoCoordsCache[cityCacheKey(next.regiao)] || currentCoords;
+              continue;
+            }
+            break;
+          }
+        }
+
+        // sobras não alocadas
+        for (const c of remaining) {
+          if (result[c.regiao]) {
+            result[c.regiao].unallocated = Number(
+              (result[c.regiao].unallocated + c.peso).toFixed(2),
+            );
+          }
+          alertas.push({
+            tipo: "capacidade",
+            msg: "Capacidade insuficiente. Carga marcada como Não Alocada. Necessário novo motorista.",
+            peso: c.peso,
+            regiao: c.regiao,
+            routeKey: c.routeKey,
+          });
+        }
+
+        const totalCap = drivers.reduce((s, d) => s + d.capacidade, 0);
+        const totalUsado = drivers.reduce((s, d) => s + d.usado, 0);
+        const efficiency =
+          totalCap > 0 ? Math.round((totalUsado / totalCap) * 100) : 0;
+
+        ultimoResultado = {
+          drivers,
+          regions: regioesOrdenadas,
+          result,
+          groups,
+          efficiency,
+          alertas,
+        };
+        renderResultado();
+      }
+
+      // ========== RENDER RESULTADO ==========
+      function renderResultado() {
+        const { drivers, regions, result, groups, efficiency, alertas } =
+          ultimoResultado;
+        document.getElementById("resultado").classList.add("visible");
+
+        const effBox = document.getElementById("efficiencyBox");
+        effBox.innerHTML = `
+        <div>
+          <span class="label">Eficiência total da frota</span>
+          <div class="progress-wrap" style="width:200px; margin-top:4px">
+            <div class="progress-fill" style="width:${Math.min(efficiency, 100)}%; background: var(--primary); height:10px; border-radius:999px"></div>
+          </div>
+        </div>
+        <span class="value">${efficiency}%</span>
+      `;
+
+        const alertasBox = document.getElementById("alertasBox");
+        if (alertas.length) {
+          alertasBox.innerHTML = alertas
+            .map(
+              (a) => `
+          <div class="alert-box danger">
+            <span>⚠️</span>
+            <span>${a.msg} (${a.peso} kg não alocado${a.regiao ? " – " + a.regiao : ""})</span>
+          </div>
+        `,
+            )
+            .join("");
+        } else {
+          alertasBox.innerHTML = "";
+        }
+
+        const cardsEl = document.getElementById("driverCards");
+        cardsEl.innerHTML = drivers
+          .map((d, i) => {
+            const pct =
+              d.capacidade > 0 ? Math.round((d.usado / d.capacidade) * 100) : 0;
+            const cor = CORES_MOTORISTAS[i % CORES_MOTORISTAS.length];
+            const ordem =
+              Array.isArray(d.ordenacao) && d.ordenacao.length
+                ? d.ordenacao
+                : ordemRotaOtimizada(d.cidades, d.baseCidade);
+            // Converter cidades para nomes completos
+            const ordemCompleta = ordem.map((c) => obterNomeCidadeCompleto(c));
+            const pathStr =
+              ordemCompleta && ordemCompleta.length
+                ? ordemCompleta.join(" → ")
+                : "—";
+            const entregasHtml =
+              d.allocations && d.allocations.length
+                ? d.allocations
+                    .map(
+                      (a, idx) =>
+                        `<li class="delivery-item" draggable="true" data-driver-id="${d.id}" data-alloc-index="${idx}" ondragstart="handleDragStart(event)" ondragend="handleDragEnd(event)">Roteiro ${a.label} – ${a.regiao} – ${a.peso.toLocaleString(
+                          "pt-BR",
+                          { minimumFractionDigits: 2 },
+                        )} kg</li>`,
+                    )
+                    .join("")
+                : "<em>Nenhuma entrega</em>";
+            return `
+          <div class="driver-card" data-driver-id="${
+            d.id
+          }" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event)">
+            <div class="card-header" style="background:${cor}">
+              Motorista: ${d.nome}
+            </div>
+            <div class="card-body">
+              <div class="capacity-line">
+                Capacidade: ${d.usado.toLocaleString("pt-BR", { maximumFractionDigits: 0 })} / ${d.capacidade.toLocaleString("pt-BR", { maximumFractionDigits: 0 })} kg (${pct}%)
+              </div>
+              <div class="progress-wrap">
+                <div class="progress-fill" style="width:${Math.min(pct, 100)}%; background:${cor}"></div>
+              </div>
+              <div style="margin-top:12px; font-size:0.85rem; line-height:1.5">
+                <strong>Cidade base:</strong> ${d.baseCidade || CIDADE_BASE_PADRAO}<br/>
+                <strong>Próxima entrega (mais próxima):</strong> <span id="driver-next-${d.id}">calculando…</span>
+              </div>
+              <div class="deliveries" style="margin-top:12px">
+                <strong>Entregas:</strong><br/>
+                ${
+                  d.allocations && d.allocations.length
+                    ? `<ul style="margin-top:4px">${entregasHtml}</ul>`
+                    : `<div style="margin-top:4px">${entregasHtml}</div>`
+                }
+              </div>
+              <div class="route-order">
+                <strong>Ordem de rota sugerida:</strong><br/>
+                <span class="path" id="driver-path-${d.id}">${pathStr}</span>
+              </div>
+            </div>
+          </div>
+        `;
+          })
+          .join("");
+
+        // Atualiza (assíncrono) a cidade mais próxima via lat/lng + Leaflet/Haversine
+        atualizarProximasEntregasAsync();
+
+        const tbody = document.querySelector("#tabelaResumo tbody");
+        tbody.innerHTML = regions
+          .map((reg) => {
+            const data = result[reg];
+            const km = geoDB[reg] !== undefined ? geoDB[reg] + " km" : "—";
+            const motoristasReg =
+              [...new Set(data.allocations.map((a) => a.driverName))].join(
+                ", ",
+              ) || "—";
+            const paragens = Object.keys(groups[reg].routes || {}).length;
+            return `<tr>
+          <td>${km}</td>
+          <td><strong>${reg}</strong></td>
+          <td>${paragens}</td>
+          <td>${data.totalWeight.toLocaleString("pt-BR", { minimumFractionDigits: 2 })} kg</td>
+          <td>${motoristasReg}</td>
+          <td>${data.unallocated > 0 ? "<span style='color:var(--danger); font-weight:bold'>" + data.unallocated.toLocaleString("pt-BR", { minimumFractionDigits: 2 }) + " kg</span>" : "—"}</td>
+        </tr>`;
+          })
+          .join("");
+      }
+
+      // ========== ARRASTAR E SOLTAR CARGAS ENTRE MOTORISTAS ==========
+      let dragData = null;
+
+      function handleDragStart(ev) {
+        const el = ev.target;
+        const driverId = el.getAttribute("data-driver-id");
+        const allocIndex = el.getAttribute("data-alloc-index");
+        if (!driverId || allocIndex === null) return;
+        dragData = { driverId: Number(driverId), allocIndex: Number(allocIndex) };
+        if (ev.dataTransfer) {
+          ev.dataTransfer.effectAllowed = "move";
+        }
+        el.classList.add("dragging");
+      }
+
+      function handleDragEnd(ev) {
+        const el = ev.target;
+        if (el && el.classList) {
+          el.classList.remove("dragging");
+        }
+        dragData = null;
+        document
+          .querySelectorAll(".driver-card.drop-target")
+          .forEach((c) => c.classList.remove("drop-target"));
+      }
+
+      function handleDragOver(ev) {
+        if (!dragData) return;
+        ev.preventDefault();
+        if (ev.dataTransfer) {
+          ev.dataTransfer.dropEffect = "move";
+        }
+        const card = ev.currentTarget.closest(".driver-card");
+        if (card) card.classList.add("drop-target");
+      }
+
+      function handleDragLeave(ev) {
+        const card = ev.currentTarget.closest(".driver-card");
+        if (card) card.classList.remove("drop-target");
+      }
+
+      function handleDrop(ev) {
+        ev.preventDefault();
+        const targetCard = ev.currentTarget.closest(".driver-card");
+        if (!dragData || !targetCard) return;
+
+        const targetDriverId = Number(targetCard.getAttribute("data-driver-id"));
+        const { driverId: sourceDriverId, allocIndex } = dragData;
+        if (!Number.isFinite(sourceDriverId) || !Number.isFinite(targetDriverId))
+          return;
+        if (sourceDriverId === targetDriverId) return;
+
+        const srcDriver = ultimoResultado.drivers.find(
+          (d) => d.id === sourceDriverId,
+        );
+        const dstDriver = ultimoResultado.drivers.find(
+          (d) => d.id === targetDriverId,
+        );
+        if (!srcDriver || !dstDriver) return;
+
+        const carga = srcDriver.allocations[allocIndex];
+        if (!carga) return;
+
+        // valida capacidade do motorista de destino
+        if (carga.peso > dstDriver.restante) {
+          alert(
+            "Capacidade insuficiente no motorista de destino para receber esta carga.",
+          );
+          handleDragEnd(ev);
+          return;
+        }
+
+        // move carga entre motoristas
+        srcDriver.allocations.splice(allocIndex, 1);
+        dstDriver.allocations.push({ ...carga });
+
+        // recalcula usados, restantes e cidades de todos os motoristas
+        ultimoResultado.drivers.forEach((d) => {
+          let usado = 0;
+          const cidadesSet = new Set();
+          (d.allocations || []).forEach((a) => {
+            const peso = Number(a.peso) || 0;
+            usado += peso;
+            if (a.regiao) cidadesSet.add(a.regiao);
+          });
+          d.usado = Number(usado.toFixed(2));
+          d.restante = Number((d.capacidade - d.usado).toFixed(2));
+          d.cidades = Array.from(cidadesSet);
+          d.ordenacao = d.cidades.slice();
+        });
+
+        // atualiza tabela de resumo por região (troca nome do motorista)
+        const res = ultimoResultado.result;
+        if (res && carga.regiao && res[carga.regiao]) {
+          const regInfo = res[carga.regiao];
+          const allocList = regInfo.allocations || [];
+          const srcName = srcDriver.nome;
+          for (const alloc of allocList) {
+            if (
+              alloc.driverName === srcName &&
+              alloc.client === carga.routeKey &&
+              Number(alloc.weight) === Number(carga.peso)
+            ) {
+              alloc.driverName = dstDriver.nome;
+              break;
+            }
+          }
+        }
+
+        // recalcula eficiência global
+        const totalCap = ultimoResultado.drivers.reduce(
+          (s, d) => s + (Number(d.capacidade) || 0),
+          0,
+        );
+        const totalUsado = ultimoResultado.drivers.reduce(
+          (s, d) => s + (Number(d.usado) || 0),
+          0,
+        );
+        ultimoResultado.efficiency =
+          totalCap > 0 ? Math.round((totalUsado / totalCap) * 100) : 0;
+
+        dragData = null;
+        document
+          .querySelectorAll(".driver-card.drop-target")
+          .forEach((c) => c.classList.remove("drop-target"));
+
+        renderResultado();
+      }
+
+      // ========== EXPORTAÇÃO ==========
+      function exportarJSON() {
+        const backup = {
+          motoristas,
+          cargas: document.getElementById("inputCargas").value.trim(),
+          exportadoEm: new Date().toISOString(),
+        };
+        const blob = new Blob([JSON.stringify(backup, null, 2)], {
+          type: "application/json",
+        });
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(blob);
+        a.download =
+          "roteirizador_backup_" +
+          new Date().toISOString().slice(0, 10) +
+          ".json";
+        a.click();
+        URL.revokeObjectURL(a.href);
+      }
+
+      function exportarCSV() {
+        const { drivers } = ultimoResultado;
+        if (!drivers || !drivers.length) {
+          alert("Processe o roteiro antes de exportar CSV.");
+          return;
+        }
+        let csv = "Motorista;Capacidade (kg);Usado (kg);%;Entregas\n";
+        drivers.forEach((d) => {
+          const pct =
+            d.capacidade > 0 ? ((d.usado / d.capacidade) * 100).toFixed(1) : 0;
+          const entregas = d.allocations
+            .map((a) => `${a.label} - ${a.regiao} - ${a.peso}kg`)
+            .join(" | ");
+          csv += `"${d.nome}";${d.capacidade};${d.usado};${pct};"${entregas}"\n`;
+        });
+        const blob = new Blob(["\uFEFF" + csv], {
+          type: "text/csv;charset=utf-8",
+        });
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(blob);
+        a.download =
+          "roteirizador_romaneio_" +
+          new Date().toISOString().slice(0, 10) +
+          ".csv";
+        a.click();
+        URL.revokeObjectURL(a.href);
+      }
+
+      function imprimirRomaneio() {
+        window.print();
+      }
+
+      function importarJSON(ev) {
+        const f = ev.target.files[0];
+        if (!f) return;
+        const r = new FileReader();
+        r.onload = () => {
+          try {
+            const data = JSON.parse(r.result);
+            if (Array.isArray(data.motoristas)) {
+              motoristas = data.motoristas.map((d) => ({
+                id: d.id,
+                nome: (d.nome || "").toString().toUpperCase(),
+                veiculo: (d.veiculo || "").toString().toUpperCase(),
+                capacidade: Number(d.capacidade) || 0,
+                baseCidade: (d.baseCidade || "")
+                  .toString()
+                  .toUpperCase()
+                  .trim(),
+              }));
+            }
+            if (typeof data.cargas === "string")
+              document.getElementById("inputCargas").value = data.cargas;
+            salvarDados();
+            alert("Importação concluída.");
+          } catch (e) {
+            alert("Arquivo JSON inválido.");
+          }
+        };
+        r.readAsText(f);
+        ev.target.value = "";
+      }
+
+      // ========== EXEMPLO ==========
+      function carregarExemploCargas() {
+        document.getElementById("inputCargas").value =
+          "53458/ARAPONGAS/210\n53441/ARAPONGAS/816\n542236/ARAPONGAS/188\n52457/LONDRINA/2429\n52424/CAMBÉ/997\n56874/MAUÁ DA SERRA/1159\n58459/APUCARANA/714";
+      }
+
+      // ========== AUTO-SALVAR NO INPUT ==========
+      document.addEventListener("DOMContentLoaded", () => {
+        carregarDados();
+        const inputCargas = document.getElementById("inputCargas");
+        if (inputCargas) inputCargas.addEventListener("blur", salvarDados);
+      });
+    </script>
+    <script
+      src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+      integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+      crossorigin=""
+    ></script>
+  </body>
+</html>
